@@ -1,36 +1,38 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#78856a"><meta name="description" content="わが家のお金の置き場所を、3つのSTEPで整理するアプリ"><title>わが家のお金の置き場所整理</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#78856a"><meta name="description" content="私のお金の置き場所を、3つのSTEPで整理するシート"><title>私のお金の置き場所管理シート</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="top"><a class="brand" href="#step1" aria-label="ホーム"><span class="brand-mark">⌂</span><span><small>HOUSEHOLD MONEY</small><strong>わが家のお金の置き場所整理</strong></span></a><button class="icon-button" id="settingsOpen" aria-label="設定とバックアップ">⚙</button></header>
+<header class="top"><a class="brand" href="#step1" aria-label="ホーム"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 15 16 5l12 10v13H19v-8h-6v8H4z"/><path d="M2 15 16 3l14 12" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><small>MY MONEY</small><strong>私のお金の置き場所管理シート</strong></span></a><button class="icon-button" id="settingsOpen" aria-label="設定とバックアップ">⚙</button></header>
 <main>
-  <section class="hero"><div><p class="eyebrow">わが家のお金を、心地よく整える</p><h1>お金の置き場所を<br>一緒に整理しよう。</h1><p>どこに・いくらあるかを確認し、役割を考えて、これからのお金の流れを作ります。</p></div><div class="hero-plant" aria-hidden="true">🌿</div></section>
+  <section class="hero"><div><p class="eyebrow">MY MONEY PLACEMENT</p><h1>私のお金を<br>一緒に整理しよう</h1></div><div class="hero-house" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M12 46 50 14l38 32v42H59V62H41v26H12z"/><path d="M7 47 50 10l43 37" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></div></section>
   <nav class="step-nav" aria-label="整理のステップ"><button class="step-tab active" data-view="step1"><span>STEP 1</span>口座・資産</button><button class="step-tab" data-view="step2"><span>STEP 2</span>お金の役割</button><button class="step-tab" data-view="step3"><span>STEP 3</span>口座を見直す</button></nav>
   <section id="view-step1" class="view active">
     <div class="intro"><span class="step-label">STEP 1</span><h2>いま持っている口座・資産を全部書き出そう</h2><p>まずは、家のお金が「どこに・いくらあるか」を確認します👀<br>銀行口座だけでなく、証券口座・定期預金・手元の現金も書き出しましょう。<br>残高は記入時点のおおよその金額でOKです👌ˊ˗</p></div>
     <div class="date-card"><label for="entryDate">記入日</label><input id="entryDate" type="date"></div>
     <div class="summary-strip"><article><small>現金・預貯金</small><strong id="cashTotal">¥0</strong></article><article><small>投資・運用資産</small><strong id="investmentTotal">¥0</strong></article><article><small>その他</small><strong id="otherTotal">¥0</strong></article><article class="grand"><small>資産合計</small><strong id="assetTotal">¥0</strong></article></div>
-    <div class="section-head"><div><h3>口座・資産一覧 <span class="count" id="accountCount">0</span></h3></div><button class="primary" id="addAccount">＋ 口座を追加</button></div>
-    <div id="accountList" class="account-list"></div><div class="empty" id="emptyState"><div class="empty-icon">🏡</div><h3>口座や資産を書き出してみましょう</h3><p>銀行・証券・手元の現金など、管理しているものを登録できます。</p><button class="primary" id="emptyAdd">口座を追加する</button></div>
+    <div class="asset-prompt"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 15 16 5l12 10v13H19v-8h-6v8H4z"/><path d="M2 15 16 3l14 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><div><strong>口座や資産を書き出してみましょう</strong><span>銀行・証券・手元の現金など、管理しているものを登録できます。</span></div></div>
+    <button class="primary add-account-main" id="addAccount">＋ 口座を追加する</button>
+    <div class="section-head"><div><h3>口座・資産一覧 <span class="count" id="accountCount">0</span></h3></div></div>
+    <div id="accountList" class="account-list"></div>
     <p class="warning">※口座番号・暗証番号・ログインID・パスワードは記入しないでください。</p>
   </section>
   <section id="view-step2" class="view">
-    <div class="intro"><span class="step-label">STEP 2</span><h2>お金を4つの役割に仕分けよう</h2><p>お金は、金額だけでなく「何のために置いているか」が大切🌱<br>STEP1で選んだ役割ごとに現在額を自動集計し、目標との差と現金で残しておきたい金額を整理します。</p></div>
-    <div class="role-explain-grid"><article><h3>① 使う</h3><p>毎月の生活費や固定費など、近いうちに使うお金</p><small>例：食費・日用品・家賃・カード引き落とし</small></article><article><h3>② 守る</h3><p>急な出費や収入減に備え、現金で残しておくお金</p><small>例：生活防衛費・医療費・家電の故障</small></article><article><h3>③ 貯める</h3><p>使う予定や目的が決まっているお金</p><small>例：教育費・旅行・車・住宅・税金</small></article><article><h3>④ 増やす</h3><p>当面使う予定がなく、長期間かけて育てるお金</p><small>例：NISA・iDeCo・投資信託</small></article></div>
+    <div class="intro"><span class="step-label">STEP 2</span><h2>お金を4つの役割に仕分けよう</h2><p>お金は金額だけでなく、何のために置いているかが大切です。</p></div>
+    <div class="role-explain-grid"><article><h3>① 使う</h3><p>毎月の生活費や固定費など、近いうちに使うお金</p><small>例：食費・日用品・家賃・カード引き落とし</small></article><article><h3>② 守る</h3><p>急な出費や収入減に備え、現金で残しておくお金</p><small>例：生活防衛費・医療費・家電の故障</small></article><article><h3>③ 貯める</h3><p>使う予定や目的が決まっているお金</p><small>例：積立貯金・教育費・旅行・車・住宅・税金</small></article><article><h3>④ 増やす</h3><p>当面使う予定がなく、長期間かけて育てるお金</p><small>例：NISA・iDeCo・投資信託</small></article></div>
     <div class="section-head"><div><h3>役割別にいくらある？</h3><p>STEP1から自動集計</p></div></div><div id="roleRows" class="role-table"></div>
-    <div class="panel"><div class="section-head compact"><div><h3>「貯めるお金」を目的別に分けたい人はこちら</h3></div><button class="secondary" id="addGoal">＋ 目的を追加</button></div><p class="muted">目的ごとの目標・現在額・置き場所・使う時期を記録できます。</p><div id="goalRows" class="goal-table"></div><p id="goalEmpty" class="empty-inline">目的別の入力欄はまだありません。</p></div>
-    <div class="panel cash-panel"><h3>現金で残す金額の整理</h3><p class="muted">STEP1の現金・預貯金と、STEP2で決めた目標額から計算します。</p><div id="cashPlan" class="cash-plan"></div><div class="calculation-note">ここで出た金額は、資産運用を考えるための目安です💴 すべてを投資に回す必要はありません！<br>収入の変化や、近い将来の大きな支出も含めて考えましょう( ･ᴗ･ )<br>※「長期間使わないお金の候補」は、使う・守るの目標金額を入力すると表示されます。</div></div>
+    <div class="panel"><div class="section-head compact"><div><h3>積立貯金を目的別に整理</h3></div><button class="secondary" id="addGoal">＋ 積立貯金を追加</button></div><p class="muted">目的ごとの目標・現在額・置き場所・使う時期を記録できます。</p><div id="goalRows" class="goal-table"></div><p id="goalEmpty" class="empty-inline">目的別の入力欄はまだありません。</p></div>
+    <div class="panel cash-panel"><h3>現金で残す金額の整理</h3><p class="muted">STEP1の現金・預貯金と、STEP2で決めた目標額から計算します。</p><div id="cashPlan" class="cash-plan"></div><div class="calculation-note">ここで出た金額は目安です。すべてを運用に回す必要はありません。収入の変化や、近い将来の大きな支出も含めて考えましょう。<br>「長期間使わないお金の金額」は、使う・守るの目標金額を入力すると計算されます。</div></div>
   </section>
   <section id="view-step3" class="view">
     <div class="intro"><span class="step-label">STEP 3</span><h2>口座を「残す・保留・解約」に仕分けよう</h2><p>口座の役割と連携先を確認したら、これからも必要かを判断します👀<br>すぐに決められない口座は「保留」にして、見直す期限を決めればOKです。口座名と役割はSTEP1から自動表示されます。</p></div>
     <div class="decision-guide"><article><h3>残す</h3><p>・役割がはっきりしている<br>・給与や引き落としに使う<br>・管理するメリットがある</p></article><article><h3>保留</h3><p>・必要か判断できない<br>・手続きや連携を確認中<br>・今後使う可能性がある</p></article><article><h3>解約を検討</h3><p>・他の口座と役割が重複<br>・長期間使っていない<br>・残している理由が曖昧</p></article></div>
     <div class="status-counts"><div><span>残す</span><strong id="keepCount">0</strong></div><div><span>保留</span><strong id="holdCount">0</strong></div><div><span>解約を検討</span><strong id="considerCount">0</strong></div></div>
-    <p class="hint">STEP1で入力した口座が下の表に自動表示されます。<br>黄色の「判断・理由・次にやること・期限」を入力してください。</p><div id="reviewList" class="review-list"></div>
-    <div class="panel checklist-panel"><h3>解約する前に、ここを確認！</h3><p class="muted">解約を検討するときは、6項目を確認しましょう。</p><div id="closureChecks"></div></div>
-    <div class="panel flow-panel"><h3>整理後の「わが家のお金の流れ」を決めよう</h3><p class="muted">これからのお金の置き場所・動きを記入します。</p><div id="flowRows"></div><div class="flow-arrow">入る　→　使う　→　守る・貯める　→　増やす</div></div>
-    <p class="closing-note">口座の数を減らすことだけが正解ではありません⚠️<br>大切なのは、それぞれの口座に役割があり、自分で管理できる状態にすること💡あなたの家に合った、続けやすい仕組みを作ってみてください🌷</p>
+    <p class="hint">STEP1で登録した口座を確認し、それぞれ「残す・保留・解約を検討」から選びます。</p><div id="reviewList" class="review-list"></div>
+    <div class="panel checklist-panel"><h3>解約する前に、ここを確認！</h3><p class="muted">解約を検討するときの確認項目です。</p><div id="closureChecks"></div></div>
+    <div class="panel flow-panel"><h3>整理後の「私のお金の流れ」を決めよう</h3><p class="muted">STEP1で登録した口座から、役割ごとの置き場所を選びます。</p><div id="flowRows"></div><div class="flow-arrow">入る　→　使う　→　守る・貯める　→　増やす</div><button class="primary poster-button" id="savePoster">整理後のお金の流れを画像で保存</button></div>
+    <p class="closing-note">口座の数を減らすことだけが正解ではありません。大切なのは、それぞれの口座に役割があり、自分で管理できる状態にすることです。</p>
   </section>
 </main>
 <footer>入力内容はこの端末のブラウザー内に保存されます。銀行との連携・外部送信はありません。</footer>
