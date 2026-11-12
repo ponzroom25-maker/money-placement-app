@@ -28,30 +28,82 @@
   function renderCashPlan(){const p=cashPlan();const lines=[['現在の現金・預貯金',yen(p.current),''],['使うお金の目標額',p.use===null?'未入力':yen(p.use),''],['守るお金の目標額',p.protect===null?'未入力':yen(p.protect),''],['1年以内に使う「貯めるお金」の目標額',yen(p.near),'']];$('cashPlan').innerHTML=lines.map(([l,v])=>`<div class="cash-line"><span>${l}</span><strong>${v}</strong></div>`).join('')+`<div class="cash-results"><article class="cash-result keep"><span>現金で残しておきたい金額</span><strong>${p.keep===null?'未入力':yen(p.keep)}</strong></article><article class="cash-result candidate"><span>長期間使わないお金の金額</span><strong>${p.candidate===null?'未入力':yen(p.candidate)}</strong></article></div>`}
   function renderReviews(){const counts={'残す':0,'保留':0,'解約を検討':0};$('reviewList').innerHTML=state.accounts.length?state.accounts.map((a,i)=>{const r=state.reviews[a.id]||{};if(counts[r.status]!==undefined)counts[r.status]++;return `<article class="review-row"><div class="review-account"><span class="account-no">${i+1}</span><div class="review-name"><strong>${esc(a.name)}</strong><small>${yen(a.balance)} ・ ${esc(a.type)} ・ 役割：${esc(roleLabel(a.role))}</small></div></div><div class="review-actions" role="radiogroup" aria-label="${esc(a.name)}の見直し判断">${decisions.map(d=>`<label class="decision-choice decision-${decisions.indexOf(d)} ${r.status===d?'selected':''}"><input type="radio" name="review-${esc(a.id)}" value="${d}" data-review-status="${esc(a.id)}" ${r.status===d?'checked':''}><span>${d}</span></label>`).join('')}</div><button class="review-detail" data-review="${esc(a.id)}">理由・期限を記入</button></article>`}).join(''):'<p class="muted">STEP1で口座を入力すると、ここに表示されます。</p>';$('keepCount').textContent=counts['残す'];$('holdCount').textContent=counts['保留'];$('considerCount').textContent=counts['解約を検討'];$('closureChecks').innerHTML=closureItems.map((t,i)=>`<div class="check-line"><span class="check-mark" aria-hidden="true">${i+1}</span><span>${t}</span></div>`).join('');$('flowRows').innerHTML=flowLabels.map((t,i)=>`<label class="flow-row"><span class="flow-label">${t}</span><span class="flow-arrow-small">→</span><select data-flow-account="${i}" aria-label="${t}"><option value="">口座を選択</option>${state.accounts.map(a=>`<option value="${esc(a.id)}" ${state.flowAccountIds[i]===a.id?'selected':''}>${esc(a.name)}（${esc(roleLabel(a.role))}）</option>`).join('')}</select></label>`).join('')}
   function savePoster(){
-    const W=960,M=48,CW=W-M*2,baseCanvas=document.createElement('canvas');baseCanvas.width=W;baseCanvas.height=1;const measure=baseCanvas.getContext('2d');
-    const wrapLines=(value,max,font)=>{measure.font=font;const out=[];let line='';for(const ch of String(value).replace(/\s+/g,' ')){if(line&&measure.measureText(line+ch).width>max){out.push(line);line=ch}else line+=ch}if(line)out.push(line);return out.length?out:['']};
-    const accountRows=state.accounts.map(a=>{const r=state.reviews[a.id]||{},details=[`判断理由：${r.reason||'未入力'}`,`次にすること：${r.action||'未入力'}`,`期限：${r.deadline||'未設定'}`].flatMap(t=>wrapLines(t,CW-44,'16px -apple-system, BlinkMacSystemFont, Noto Sans JP, sans-serif'));return {a,r,details,height:82+details.length*23+16}});
-    if(!accountRows.length)accountRows.push({a:null,r:{},details:['STEP1で口座を登録すると、ここに表示されます。'],height:112});
-    const accountsTop=370,accountsHeight=accountRows.reduce((n,r)=>n+r.height+10,0),checksTop=accountsTop+accountsHeight+62,checksHeight=328,flowTop=checksTop+checksHeight+58,flowHeight=58+5*92,footerTop=flowTop+flowHeight+36,H=footerTop+90,scale=Math.min(1,15000/H);
-    const canvas=document.createElement('canvas');canvas.width=Math.round(W*scale);canvas.height=Math.round(H*scale);const c=canvas.getContext('2d');c.scale(scale,scale);
+    const W=1000,M=52,CW=W-M*2,baseCanvas=document.createElement('canvas');baseCanvas.width=W;baseCanvas.height=1;const measure=baseCanvas.getContext('2d');
+    const stack="-apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif";
+    const font=(size,bold=false)=>`${bold?'700':'400'} ${size}px ${stack}`;
+    const wrapLines=(value,max,fontSpec)=>{measure.font=fontSpec;const out=[];let line='';for(const ch of String(value??'').replace(/\s+/g,' ')){if(line&&measure.measureText(line+ch).width>max){out.push(line);line=ch}else line+=ch}if(line)out.push(line);return out.length?out:['']};
+    const roleSums=sums(),assets=currentAssets(),cash=cashPlan();
+    const roleColors={use:{fill:'#eff6f0',accent:'#78a38b',ink:'#527963'},protect:{fill:'#faf0e9',accent:'#b48266',ink:'#8c634a'},save:{fill:'#faf5e6',accent:'#b99d4e',ink:'#806c2f'},grow:{fill:'#f3eff8',accent:'#8b7ba9',ink:'#6e608a'}};
+    const accountRows=state.accounts.map(a=>{
+      const r=state.reviews[a.id]||{},nameLines=wrapLines(a.name,CW-236,font(20,true));
+      const content=[`${yen(a.balance)} ・ ${a.type} ・ 役割：${roleLabel(a.role)}${a.owner?` ・ 名義：${a.owner}`:''}`,...(a.links?[`連携先・入出金：${a.links}`]:[]),...(a.memo?[`メモ：${a.memo}`]:[]),`判断理由：${r.reason||'未入力'}`,`次にすること：${r.action||'未入力'}`,`期限：${r.deadline||'未設定'}`];
+      const lines=content.flatMap(v=>wrapLines(v,CW-40,font(14)));
+      return {a,r,nameLines,lines,height:18+nameLines.length*24+lines.length*18+16};
+    });
+    if(!accountRows.length)accountRows.push({a:null,r:{},nameLines:['口座の登録はありません'],lines:['STEP1で口座・資産を登録すると、ここに表示されます。'],height:86});
+    const goals=state.goals.filter(g=>g.name?.trim()).map(g=>{
+      const nameLines=wrapLines(g.name,CW-38,font(17,true));
+      const metaLines=wrapLines(`置き場所：${g.location||'未選択'}　使う時期：${g.period||'未選択'}`,CW-38,font(13));
+      return {g,nameLines,metaLines,height:18+nameLines.length*21+metaLines.length*17+62+14};
+    });
+    const closureColumns=[closureItems.slice(0,3),closureItems.slice(3)];
+    const closureLines=closureColumns.map(col=>col.map(item=>wrapLines(item,(CW-28)/2-27,font(12))));
+    const closureRowHeights=Array.from({length:3},(_,i)=>Math.max(closureLines[0][i].length,closureLines[1][i].length)*16+5);
+    let y=154;
+    const assetTitleY=y;y+=31;const assetCardsY=y;y+=78+23;
+    const reviewTitleY=y;y+=31;const reviewCardsY=y;y+=80+48;
+    const accountsTitleY=y;y+=31;const accountsTop=y;for(const row of accountRows)y+=row.height+9;y+=25;
+    const roleTitleY=y;y+=31;const roleCardsTop=y;const roleCardW=(CW-16)/2,roleCardH=116; y+=roleCardH*2+14+66+24;
+    const goalsTitleY=y;y+=31;const goalRowsTop=y;if(goals.length){for(const row of goals)y+=row.height+8}else y+=54;y+=24;
+    const cashTitleY=y;y+=31;const cashTop=y;y+=2*66+10+14+84+12+22+24;
+    const flowTitleY=y;y+=31;const flowTop=y,flowH=72,flowGap=10;y+=3*flowH+2*flowGap+26;
+    const closureTop=y;y+=22+25;for(const h of closureRowHeights)y+=h;y+=16;
+    const H=y,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');
     const colors={bg:'#f8f5ed',paper:'#fffdf8',ink:'#51483c',muted:'#898477',sage:'#78856a',sageDark:'#56664e',line:'#e9e3d7',green:'#e8f0e6',peach:'#f7e9df',butter:'#f7f0d9',lavender:'#eee9f4'};
     c.fillStyle=colors.bg;c.fillRect(0,0,W,H);
-    const round=(x,y,w,h,r,fill,stroke)=>{c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=1.5;c.stroke()}};
-    const text=(v,x,y,size=18,color=colors.ink,bold=false)=>{c.fillStyle=color;c.font=`${bold?'700':'400'} ${size}px -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif`;c.fillText(String(v),x,y)};
-    const drawLines=(lines,x,y,size=16,color=colors.ink,bold=false,step=23)=>{for(const line of lines){text(line,x,y,size,color,bold);y+=step}return y};
+    const round=(x,y0,w,h,r,fill,stroke)=>{c.beginPath();c.roundRect(x,y0,w,h,r);c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=1.3;c.stroke()}};
+    const write=(value,x,y0,size=16,color=colors.ink,bold=false,maxWidth=Infinity)=>{let px=size;measure.font=font(px,bold);while(measure.measureText(String(value)).width>maxWidth&&px>11){px--;measure.font=font(px,bold)}c.font=font(px,bold);c.fillStyle=color;c.fillText(String(value),x,y0)};
+    const drawLines=(lines,x,y0,size=14,color=colors.ink,bold=false,step=18,maxWidth=CW-40)=>{for(const line of lines){write(line,x,y0,size,color,bold,maxWidth);y0+=step}return y0};
+    const sectionTitle=(tag,title,top)=>{write(tag,M,top+17,12,colors.sageDark,true);write(title,M+58,top+19,20,colors.ink,true,CW-58);c.fillStyle='#d9dfd1';c.fillRect(M,top+29,74,2);return top+31};
+    const drawStatCards=(items,top,height,cols)=>{const gap=10,w=(CW-gap*(cols-1))/cols;items.forEach((it,i)=>{const row=Math.floor(i/cols),col=i%cols,x=M+col*(w+gap),yy=top+row*(height+8);round(x,yy,w,height,13,it.fill||colors.paper,colors.line);write(it.label,x+14,yy+23,12,colors.muted,true,w-28);write(it.value,x+14,yy+54,22,it.ink||colors.ink,true,w-28)})};
     const statusColors={'残す':{fill:'#e4efe5',ink:'#54775e'},'保留':{fill:'#f8f0d8',ink:'#8a7135'},'解約を検討':{fill:'#f5e5dc',ink:'#94694f'},'未選択':{fill:'#efeee8',ink:'#777366'}};
-    // Friendly header with a small house mark at the end of the title.
-    round(M,32,CW,124,24,'#e8ecdf');text('私のお金の置き場所管理シート',M+26,83,29,'#3f4d3a',true);text(new Date().toLocaleDateString('ja-JP'),M+26,121,17,colors.muted);
-    c.save();c.translate(W-M-66,54);c.fillStyle=colors.sage;c.beginPath();c.moveTo(2,34);c.lineTo(35,7);c.lineTo(68,34);c.lineTo(61,34);c.lineTo(61,72);c.lineTo(42,72);c.lineTo(42,49);c.lineTo(29,49);c.lineTo(29,72);c.lineTo(9,72);c.lineTo(9,34);c.closePath();c.fill();c.restore();
-    text('口座の見直し結果',M,204,23,colors.ink,true);
-    const summary=[['残す',countsForPoster('残す'),colors.green],['保留',countsForPoster('保留'),colors.butter],['解約を検討',countsForPoster('解約を検討'),colors.peach]],gap=14,cardW=(CW-gap*2)/3;
-    summary.forEach(([label,value,fill],i)=>{const x=M+i*(cardW+gap);round(x,222,cardW,102,18,fill);text(label,x+18,256,17,colors.muted,true);text(`${value} 口座`,x+18,298,27,colors.ink,true)});
-    text('登録口座と役割・見直し内容',M,354,23,colors.ink,true);
-    let y=accountsTop;accountRows.forEach(({a,r,details,height})=>{round(M,y,CW,height,16,colors.paper,colors.line);if(a){text(a.name,M+20,y+29,21,colors.ink,true);const b=statusColors[r.status||'未選択']||statusColors['未選択'];round(W-M-188,y+13,168,32,12,b.fill);text(r.status||'未選択',W-M-174,y+35,15,b.ink,true);text(`${yen(a.balance)} ・ ${a.type} ・ 役割：${roleLabel(a.role)}`,M+20,y+56,16,colors.muted)}else{text('口座を登録すると、口座名・役割・見直し内容がここに表示されます。',M+20,y+34,17,colors.muted)}drawLines(details,M+20,y+(a?82:65),15,colors.ink,false,22);y+=height+10});
-    round(M,checksTop,CW,checksHeight,18,'#fffdf8',colors.line);text('解約を検討する前の確認',M+20,checksTop+36,21,colors.ink,true);text('確認項目',W-M-105,checksTop+36,14,colors.muted,true);closureItems.forEach((item,i)=>{const yy=checksTop+78+i*39;round(M+20,yy-19,26,26,13,['#e7efe5','#f8f0d8','#f3e8da','#e8edf2','#f2eaf4','#f6e9df'][i]);text(String(i+1),M+28,yy,13,colors.sageDark,true);text(item,M+60,yy,15,colors.ink)});
-    text('整理後の私のお金の流れ',M,flowTop+24,23,colors.ink,true);const flowFills=[colors.green,colors.peach,'#e9eddc',colors.butter,colors.lavender];
-    flowLabels.forEach((label,i)=>{const yy=flowTop+44+i*92;round(M,yy,CW,76,17,colors.paper,colors.line);round(M+14,yy+15,46,46,14,flowFills[i]);text(String(i+1),M+31,yy+45,18,colors.sageDark,true);text(label,M+76,yy+29,15,colors.muted,true);const a=state.accounts.find(x=>x.id===state.flowAccountIds[i]);text(a?.name||'口座を選択してください',M+76,yy+55,20,colors.ink,true)});
-    const footer='口座番号・暗証番号・ログインID・パスワードは記入しないでください。解約前に振込先、引き落とし、連携、残高、履歴、手数料を確認しましょう。';drawLines(wrapLines(footer,CW,'14px -apple-system, BlinkMacSystemFont, Noto Sans JP, sans-serif'),M,footerTop+18,14,colors.muted,false,20);
+    // Minimal title treatment: house silhouette, date, and a fine sage/mustard rule.
+    c.save();c.translate(M,31);c.fillStyle=colors.sage;c.beginPath();c.moveTo(2,30);c.lineTo(31,5);c.lineTo(60,30);c.lineTo(54,30);c.lineTo(54,63);c.lineTo(37,63);c.lineTo(37,43);c.lineTo(25,43);c.lineTo(25,63);c.lineTo(8,63);c.lineTo(8,30);c.closePath();c.fill();c.restore();
+    write('私のお金の置き場所管理シート',M+78,59,28,'#3f4d3a',true,CW-90);write(new Date().toLocaleDateString('ja-JP'),M+78,91,15,colors.muted);
+    c.fillStyle='#d8dfd0';c.fillRect(M,123,CW,2);c.fillStyle='#b99d4e';c.fillRect(M,123,96,3);
+
+    sectionTitle('STEP 1','資産の合計',assetTitleY);
+    const at=assets;drawStatCards([{label:'現金・預貯金',value:yen(at.cash),fill:'#fffdf8'},{label:'投資・運用資産',value:yen(at.investment),fill:'#fffdf8'},{label:'その他',value:yen(at.other),fill:'#fffdf8'},{label:'資産合計',value:yen(at.total),fill:'#edf1e8',ink:colors.sageDark}],assetCardsY,70,4);
+    sectionTitle('STEP 3','口座の見直し結果',reviewTitleY);
+    const summary=[['残す',countsForPoster('残す'),colors.green],['保留',countsForPoster('保留'),colors.butter],['解約を検討',countsForPoster('解約を検討'),colors.peach]],summaryGap=12,summaryW=(CW-summaryGap*2)/3;
+    summary.forEach(([label,value,fill],i)=>{const x=M+i*(summaryW+summaryGap);round(x,reviewCardsY,summaryW,72,14,fill);write(label,x+15,reviewCardsY+25,14,colors.muted,true,summaryW-30);write(`${value} 口座`,x+15,reviewCardsY+55,23,colors.ink,true,summaryW-30)});
+    sectionTitle('STEP 1 / 3','登録口座と役割・見直し内容',accountsTitleY);
+    let ay=accountsTop;accountRows.forEach(({a,r,nameLines,lines,height})=>{round(M,ay,CW,height,14,colors.paper,colors.line);const badge=statusColors[r.status||'未選択']||statusColors['未選択'];round(W-M-178,ay+12,158,29,10,badge.fill);write(r.status||'未選択',W-M-166,ay+32,13,badge.ink,true,136);drawLines(nameLines,M+19,ay+29,20,colors.ink,true,23,CW-224);let lineY=ay+29+nameLines.length*24;drawLines(lines,M+19,lineY,14,colors.muted,false,18,CW-38);ay+=height+9});
+
+    sectionTitle('STEP 2','役割ごとの目標・現在額・不足額',roleTitleY);
+    const roleValues=roles.map(([k,label,purpose])=>({k,label,purpose,target:state.targets[k],current:roleSums[k],gap:state.targets[k]===null?'未入力':yen(shortfall(state.targets[k],roleSums[k]))}));
+    roleValues.forEach((v,i)=>{const row=Math.floor(i/2),col=i%2,x=M+col*(roleCardW+16),yy=roleCardsTop+row*(roleCardH+0),palette=roleColors[v.k];round(x,yy,roleCardW,roleCardH,14,palette.fill,colors.line);round(x,yy,6,roleCardH,3,palette.accent);write(v.label,x+17,yy+24,17,palette.ink,true,110);write(v.purpose,x+125,yy+23,12,colors.muted,false,roleCardW-142);const vals=[['目標',v.target===null?'未入力':yen(v.target)],['現在',yen(v.current)],['不足額',v.gap]],innerGap=7,cellW=(roleCardW-34-innerGap*2)/3;vals.forEach(([lab,val],j)=>{const xx=x+17+j*(cellW+innerGap);round(xx,yy+39,cellW,63,9,'#fffdf8');write(lab,xx+8,yy+56,10,colors.muted,true,cellW-16);write(val,xx+8,yy+87,16,colors.ink,true,cellW-16)})});
+    const roleTotalY=roleCardsTop+roleCardH*2+10,totalTarget=roles.reduce((v,[k])=>v+(Number(state.targets[k])||0),0),totalCurrent=Object.values(roleSums).reduce((v,n)=>v+n,0),totalGap=roles.reduce((v,[k])=>v+(state.targets[k]===null?0:shortfall(state.targets[k],roleSums[k])),0);
+    [['目標合計',yen(totalTarget)],['現在の合計',yen(totalCurrent)],['不足額の合計',yen(totalGap)]].forEach(([label,value],i)=>{const gap=9,w=(CW-gap*2)/3,x=M+i*(w+gap);round(x,roleTotalY,w,56,11,'#fffdf8',colors.line);write(label,x+12,roleTotalY+20,11,colors.muted,true,w-24);write(value,x+12,roleTotalY+43,16,colors.ink,true,w-24)});
+
+    sectionTitle('STEP 2','積立貯金を目的別に整理',goalsTitleY);
+    let gy=goalRowsTop;if(goals.length){goals.forEach(({g,nameLines,metaLines,height})=>{round(M,gy,CW,height,13,colors.paper,colors.line);drawLines(nameLines,M+18,gy+25,17,colors.ink,true,21,CW-36);let my=gy+25+nameLines.length*21;drawLines(metaLines,M+18,my,13,colors.muted,false,17,CW-36);const chipsTop=gy+height-67,chGap=9,chipW=(CW-36-chGap*2)/3;[['目標金額',yen(g.target)],['現在の金額',yen(g.current)],['あといくら？',yen(shortfall(g.target,g.current))]].forEach(([label,value],i)=>{const x=M+18+i*(chipW+chGap);round(x,chipsTop,chipW,53,9,['#f7f0d9','#edf1e8','#f5eee2'][i]);write(label,x+10,chipsTop+18,10,colors.muted,true,chipW-20);write(value,x+10,chipsTop+42,15,colors.ink,true,chipW-20)});gy+=height+8})}else{round(M,gy,CW,48,11,colors.paper,colors.line);write('目的別の積立貯金はまだ登録されていません。',M+17,gy+30,14,colors.muted,false,CW-34);gy+=54}
+
+    sectionTitle('STEP 2','現金で残す金額の整理',cashTitleY);
+    const cashItems=[['現在の現金・預貯金',yen(cash.current)],['使うお金の目標額',cash.use===null?'未入力':yen(cash.use)],['守るお金の目標額',cash.protect===null?'未入力':yen(cash.protect)],['1年以内に使う目的別目標',yen(cash.near)]];
+    drawStatCards(cashItems,cashTop,58,2);
+    const cashResultY=cashTop+2*66+12,resultGap=12,resultW=(CW-resultGap)/2;
+    [[`現金で残しておきたい金額`,cash.keep===null?'未入力':yen(cash.keep),colors.green,colors.sageDark],[`長期間使わないお金の金額`,cash.candidate===null?'未入力':yen(cash.candidate),colors.butter,'#795f2d']].forEach(([label,value,fill,ink],i)=>{const x=M+i*(resultW+resultGap);round(x,cashResultY,resultW,80,14,fill);write(label,x+14,cashResultY+25,13,colors.muted,true,resultW-28);write(value,x+14,cashResultY+60,24,ink,true,resultW-28)});
+    write('目安：現金・預貯金から「使う」「守る」「1年以内に使う貯める」の目標額を差し引いています。',M,cashResultY+103,12,colors.muted,false,CW);
+
+    sectionTitle('STEP 3','整理後の私のお金の流れ',flowTitleY);
+    const flowFills=[colors.green,colors.peach,'#e9eddc',colors.butter,colors.lavender],flowW=(CW-12)/2;
+    flowLabels.forEach((label,i)=>{const row=Math.floor(i/2),col=i%2,x=M+col*(flowW+12),yy=flowTop+row*(flowH+flowGap);round(x,yy,flowW,flowH,13,colors.paper,colors.line);round(x+13,yy+13,36,36,12,flowFills[i]);write(String(i+1),x+25,yy+37,15,colors.sageDark,true);write(label,x+60,yy+26,12,colors.muted,true,flowW-74);const a=state.accounts.find(v=>v.id===state.flowAccountIds[i]);write(a?.name||'口座を選択してください',x+60,yy+51,16,colors.ink,true,flowW-74)});
+
+    c.fillStyle='#d9dfd1';c.fillRect(M,closureTop,CW,1);
+    write('解約する前の確認（参考）',M,closureTop+19,12,'#898779',true,CW);
+    write('口座番号・暗証番号・ログインID・パスワードは記入しないでください。',M,closureTop+39,11,'#969284',false,CW);
+    const colW=(CW-28)/2;closureColumns.forEach((col,j)=>{const x=M+j*(colW+28);let yy=closureTop+61;col.forEach((item,i)=>{const lines=closureLines[j][i];write(`${j*3+i+1}.`,x,yy,11,'#9a978b',true,22);drawLines(lines,x+24,yy,11,'#9a978b',false,16,colW-25);yy+=closureRowHeights[i]})});
     canvas.toBlob(blob=>{if(!blob)return toast('画像を作成できませんでした');const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`私のお金の流れ-${new Date().toISOString().slice(0,10)}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('整理後のお金の流れを画像で保存しました')},'image/png');
   }
   function countsForPoster(status){return state.accounts.filter(a=>state.reviews[a.id]?.status===status).length}
