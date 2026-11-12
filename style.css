@@ -87,3 +87,6 @@
 .add-account-main{margin-bottom:14px}
 .summary-strip{margin-top:0}
 @media(max-width:760px){.asset-prompt{padding:13px 10px}.asset-prompt .asset-home{font-size:34px}}
+/* Keep the STEP 1 prompt airy without a surrounding card frame. */
+.asset-prompt{background:transparent;border:0;border-radius:0;padding:12px 0 10px}
+@media(max-width:760px){.asset-prompt{padding:12px 0 10px}}
