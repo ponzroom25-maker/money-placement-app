@@ -1,4 +1,4 @@
-# わが家のお金の置き場所整理
+# 私のお金の置き場所管理シート
 
 Excelブック「お金置き場所管理シート🏠.xlsx」の3シートをもとに再構築した、ログイン不要のモバイル向け静的Webアプリです。要件とExcel式との照合記録は [REQUIREMENTS-DIFFERENCES.md](REQUIREMENTS-DIFFERENCES.md) を参照してください。
 
