@@ -77,7 +77,7 @@
     sectionTitle('STEP 3','口座の見直し結果',reviewTitleY);
     const summary=[['残す',countsForPoster('残す'),colors.green],['保留',countsForPoster('保留'),colors.butter],['解約を検討',countsForPoster('解約を検討'),colors.peach]],summaryGap=12,summaryW=(CW-summaryGap*2)/3;
     summary.forEach(([label,value,fill],i)=>{const x=M+i*(summaryW+summaryGap);round(x,reviewCardsY,summaryW,72,14,fill);write(label,x+15,reviewCardsY+25,14,colors.muted,true,summaryW-30);write(`${value} 口座`,x+15,reviewCardsY+55,23,colors.ink,true,summaryW-30)});
-    sectionTitle('STEP 1 / 3','登録口座と役割・見直し内容',accountsTitleY);
+    sectionTitle('口座一覧','登録口座と役割・見直し内容',accountsTitleY);
     let ay=accountsTop;accountRows.forEach(({a,r,nameLines,lines,height})=>{round(M,ay,CW,height,14,colors.paper,colors.line);const badge=statusColors[r.status||'未選択']||statusColors['未選択'];round(W-M-178,ay+12,158,29,10,badge.fill);write(r.status||'未選択',W-M-166,ay+32,13,badge.ink,true,136);drawLines(nameLines,M+19,ay+29,20,colors.ink,true,23,CW-224);let lineY=ay+29+nameLines.length*24;drawLines(lines,M+19,lineY,14,colors.muted,false,18,CW-38);ay+=height+9});
 
     sectionTitle('STEP 2','役割ごとの目標・現在額・不足額',roleTitleY);
@@ -90,7 +90,7 @@
     let gy=goalRowsTop;if(goals.length){goals.forEach(({g,nameLines,metaLines,height})=>{round(M,gy,CW,height,13,colors.paper,colors.line);drawLines(nameLines,M+18,gy+25,17,colors.ink,true,21,CW-36);let my=gy+25+nameLines.length*21;drawLines(metaLines,M+18,my,13,colors.muted,false,17,CW-36);const chipsTop=gy+height-67,chGap=9,chipW=(CW-36-chGap*2)/3;[['目標金額',yen(g.target)],['現在の金額',yen(g.current)],['あといくら？',yen(shortfall(g.target,g.current))]].forEach(([label,value],i)=>{const x=M+18+i*(chipW+chGap);round(x,chipsTop,chipW,53,9,['#f7f0d9','#edf1e8','#f5eee2'][i]);write(label,x+10,chipsTop+18,10,colors.muted,true,chipW-20);write(value,x+10,chipsTop+42,15,colors.ink,true,chipW-20)});gy+=height+8})}else{round(M,gy,CW,48,11,colors.paper,colors.line);write('目的別の積立貯金はまだ登録されていません。',M+17,gy+30,14,colors.muted,false,CW-34);gy+=54}
 
     sectionTitle('STEP 2','現金で残す金額の整理',cashTitleY);
-    const cashItems=[['現在の現金・預貯金',yen(cash.current)],['使うお金の目標額',cash.use===null?'未入力':yen(cash.use)],['守るお金の目標額',cash.protect===null?'未入力':yen(cash.protect)],['1年以内に使う目的別目標',yen(cash.near)]];
+    const cashItems=[{label:'現在の現金・預貯金',value:yen(cash.current)},{label:'使うお金の目標額',value:cash.use===null?'未入力':yen(cash.use)},{label:'守るお金の目標額',value:cash.protect===null?'未入力':yen(cash.protect)},{label:'1年以内に使う目的別目標',value:yen(cash.near)}];
     drawStatCards(cashItems,cashTop,58,2);
     const cashResultY=cashTop+2*66+12,resultGap=12,resultW=(CW-resultGap)/2;
     [[`現金で残しておきたい金額`,cash.keep===null?'未入力':yen(cash.keep),colors.green,colors.sageDark],[`長期間使わないお金の金額`,cash.candidate===null?'未入力':yen(cash.candidate),colors.butter,'#795f2d']].forEach(([label,value,fill,ink],i)=>{const x=M+i*(resultW+resultGap);round(x,cashResultY,resultW,80,14,fill);write(label,x+14,cashResultY+25,13,colors.muted,true,resultW-28);write(value,x+14,cashResultY+60,24,ink,true,resultW-28)});
