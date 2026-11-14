@@ -54,11 +54,11 @@
         if(!items.length)items=[{height:76,draw(c,y){round(c,M,y,CW,60,14,palette.paper,palette.line);put(c,'登録内容はありません',M+18,y+37,16,palette.muted,false,CW-36)}}];
         const headingHeight=50,itemGap=12,sectionGap=6,maxFreshItem=page.bottom-(108+headingHeight),totalHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+itemGap,0)+sectionGap;
         let available=page.bottom-page.y;
-        // Keep a complete section together when it fits on a page. Longer lists
-        // may span pages, but only at complete account/role/goal card boundaries.
-        if(totalHeight<=page.bottom-108){
+        // Keep a section together when it fits the remaining page; otherwise
+        // continue with complete cards if one can fit before starting a new page.
+        // Long lists break only at account/role/goal card boundaries.
+        if(totalHeight<=page.bottom-108&&totalHeight<=available){
           let layoutGap=itemGap,scale=1;
-          if(totalHeight>available){if(totalHeight*.94>available){newPage();available=page.bottom-page.y}else scale=available/totalHeight}
           if(scale===1&&page.sectionCount===0&&totalHeight<available*.62){
             if(items.length>1)layoutGap+=Math.min(24,Math.max(0,(available-totalHeight)/(items.length+1)));
             const expandedHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+layoutGap,0)+sectionGap;
@@ -70,11 +70,14 @@
           page.y=startY+(headingHeight+items.reduce((sum,item)=>sum+item.height+layoutGap,0)+sectionGap)*scale;page.sectionCount++;
           return;
         }
-        if(headingHeight+Math.min(items[0].height,maxFreshItem)+itemGap>available)newPage();
+        const firstItemNeed=headingHeight+itemGap+Math.min(items[0].height,maxFreshItem),firstItemNeedAt94=headingHeight+itemGap+Math.min(items[0].height*.94,maxFreshItem);
+        if(firstItemNeed>available&&firstItemNeedAt94>available)newPage();
         heading(step,title);page.sectionCount++;
         items.forEach((item,i)=>{
-          if(i>0&&(item.height>page.bottom-page.y||item.height>maxFreshItem)){newPage();heading(step,`${title}（続き）`);page.sectionCount++}
-          const availableHeight=page.bottom-page.y,scale=Math.min(1,availableHeight/item.height),drawY=page.y;
+          let availableHeight=page.bottom-page.y,scale=1;
+          if(i>0&&item.height>availableHeight){if(item.height*.94<=availableHeight)scale=availableHeight/item.height;else{newPage();heading(step,`${title}（続き）`);page.sectionCount++;availableHeight=page.bottom-page.y}}
+          if(item.height>availableHeight)scale=Math.min(scale,availableHeight/item.height);
+          const drawY=page.y;
           if(scale<1){const offset=(CW-CW*scale)/2;page.c.save();page.c.translate(M+offset,drawY);page.c.scale(scale,scale);page.c.translate(-M,-drawY);item.draw(page.c,drawY);page.c.restore()}
           else item.draw(page.c,drawY);
           page.y+=item.height*scale+itemGap;
