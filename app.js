@@ -30,7 +30,7 @@
   async function saveSummaryPdf(){
     const btn=$('saveSummaryPdf');btn.disabled=true;toast('PDFを作成しています…');
     try{
-      const W=900,H=1600,M=44,CW=W-M*2,measureCanvas=document.createElement('canvas');measureCanvas.width=10;measureCanvas.height=10;
+      const W=1132,H=1600,M=56,CW=W-M*2,measureCanvas=document.createElement('canvas');measureCanvas.width=10;measureCanvas.height=10;
       const measure=measureCanvas.getContext('2d'),stack="-apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif";
       const font=(size,bold=false)=>`${bold?'700':'400'} ${size}px ${stack}`;
       const wrap=(value,max,size=18,bold=false)=>{measure.font=font(size,bold);const out=[];let line='';for(const ch of String(value??'').replace(/\s+/g,' ')){if(line&&measure.measureText(line+ch).width>max){out.push(line);line=ch}else line+=ch}if(line)out.push(line);return out.length?out:['']};
@@ -107,7 +107,7 @@
       pages.forEach((p,i)=>{p.c.fillStyle='#d9dfd1';p.c.fillRect(M,H-59,CW,1);put(p.c,`${i+1} / ${pages.length}`,W-M-70,H-30,13,palette.muted,false,70)});
       const images=[];for(const p of pages){const blob=await new Promise(resolve=>p.canvas.toBlob(resolve,'image/jpeg',0.78));if(!blob)throw new Error('image');images.push(new Uint8Array(await blob.arrayBuffer()))}
       const encode=s=>new TextEncoder().encode(s),join=parts=>{const total=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(total);let offset=0;for(const part of parts){out.set(part,offset);offset+=part.length}return out};
-      const pageW=108*72/25.4,pageH=192*72/25.4,objects=new Array(3+pages.length*3);objects[1]=encode('<< /Type /Catalog /Pages 2 0 R >>');
+      const pageW=210*72/25.4,pageH=297*72/25.4,objects=new Array(3+pages.length*3);objects[1]=encode('<< /Type /Catalog /Pages 2 0 R >>');
       const kids=pages.map((_,i)=>`${3+i*3} 0 R`).join(' ');objects[2]=encode(`<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
       pages.forEach((_,i)=>{const pageId=3+i*3,contentId=pageId+1,imageId=pageId+2,stream=encode(`q\n${pageW.toFixed(3)} 0 0 ${pageH.toFixed(3)} 0 0 cm\n/Im0 Do\nQ\n`);objects[pageId]=encode(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW.toFixed(3)} ${pageH.toFixed(3)}] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`);objects[contentId]=join([encode(`<< /Length ${stream.length} >>\nstream\n`),stream,encode('endstream')]);objects[imageId]=join([encode(`<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${images[i].length} >>\nstream\n`),images[i],encode('\nendstream')])});
       const header=encode('%PDF-1.4\n%PhoneSummary\n'),parts=[header],offsets=[0];let offset=header.length;
