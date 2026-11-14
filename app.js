@@ -44,8 +44,8 @@
       let page;
       function newPage(first=false){
         const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const c=canvas.getContext('2d');c.fillStyle=palette.bg;c.fillRect(0,0,W,H);
-        if(first){house(c,M,36,62);put(c,'私のお金の整理結果',M+80,78,30,'#3f4d3a',true,CW-92);put(c,'口座・資産からお金の流れまで',M+80,111,16,palette.muted,false,CW-92);c.fillStyle='#d8dfd0';c.fillRect(M,145,CW,2);c.fillStyle=palette.gold;c.fillRect(M,145,100,4);page={canvas,c,y:180,bottom:H-78}}
-        else{house(c,M,27,44);put(c,'私のお金の整理結果',M+58,58,20,'#3f4d3a',true,CW-80);c.fillStyle='#d8dfd0';c.fillRect(M,82,CW,2);page={canvas,c,y:108,bottom:H-78}}
+        if(first){house(c,M,36,62);put(c,'私のお金の整理結果',M+80,78,30,'#3f4d3a',true,CW-92);put(c,'口座・資産からお金の流れまで',M+80,111,16,palette.muted,false,CW-92);c.fillStyle='#d8dfd0';c.fillRect(M,145,CW,2);c.fillStyle=palette.gold;c.fillRect(M,145,100,4);page={canvas,c,y:180,bottom:H-78,sectionCount:0}}
+        else{house(c,M,27,44);put(c,'私のお金の整理結果',M+58,58,20,'#3f4d3a',true,CW-80);c.fillStyle='#d8dfd0';c.fillRect(M,82,CW,2);page={canvas,c,y:108,bottom:H-78,sectionCount:0}}
         pages.push(page);
       }
       newPage(true);
@@ -53,14 +53,27 @@
       function section(step,title,items){
         if(!items.length)items=[{height:76,draw(c,y){round(c,M,y,CW,60,14,palette.paper,palette.line);put(c,'登録内容はありません',M+18,y+37,16,palette.muted,false,CW-36)}}];
         const headingHeight=50,itemGap=12,sectionGap=6,maxFreshItem=page.bottom-(108+headingHeight),totalHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+itemGap,0)+sectionGap;
-        const available=page.bottom-page.y;
+        let available=page.bottom-page.y;
         // Keep a complete section together when it fits on a page. Longer lists
         // may span pages, but only at complete account/role/goal card boundaries.
-        if(totalHeight<=page.bottom-108){if(totalHeight>available)newPage()}
-        else if(headingHeight+Math.min(items[0].height,maxFreshItem)+itemGap>available)newPage();
-        heading(step,title);
+        if(totalHeight<=page.bottom-108){
+          let layoutGap=itemGap,scale=1;
+          if(totalHeight>available){if(totalHeight*.94>available){newPage();available=page.bottom-page.y}else scale=available/totalHeight}
+          if(scale===1&&page.sectionCount===0&&totalHeight<available*.62){
+            if(items.length>1)layoutGap+=Math.min(24,Math.max(0,(available-totalHeight)/(items.length+1)));
+            const expandedHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+layoutGap,0)+sectionGap;
+            scale=Math.min(1.07,(W-32)/CW,available/expandedHeight);
+          }
+          const startY=page.y;page.c.save();
+          if(scale!==1){page.c.translate(W/2,startY);page.c.scale(scale,scale);page.c.translate(-W/2,-startY)}
+          heading(step,title);items.forEach(item=>{item.draw(page.c,page.y);page.y+=item.height+layoutGap});page.y+=sectionGap;page.c.restore();
+          page.y=startY+(headingHeight+items.reduce((sum,item)=>sum+item.height+layoutGap,0)+sectionGap)*scale;page.sectionCount++;
+          return;
+        }
+        if(headingHeight+Math.min(items[0].height,maxFreshItem)+itemGap>available)newPage();
+        heading(step,title);page.sectionCount++;
         items.forEach((item,i)=>{
-          if(i>0&&(item.height>page.bottom-page.y||item.height>maxFreshItem)){newPage();heading(step,`${title}（続き）`)}
+          if(i>0&&(item.height>page.bottom-page.y||item.height>maxFreshItem)){newPage();heading(step,`${title}（続き）`);page.sectionCount++}
           const availableHeight=page.bottom-page.y,scale=Math.min(1,availableHeight/item.height),drawY=page.y;
           if(scale<1){const offset=(CW-CW*scale)/2;page.c.save();page.c.translate(M+offset,drawY);page.c.scale(scale,scale);page.c.translate(-M,-drawY);item.draw(page.c,drawY);page.c.restore()}
           else item.draw(page.c,drawY);
