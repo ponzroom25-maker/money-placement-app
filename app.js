@@ -50,7 +50,24 @@
       }
       newPage(true);
       function heading(step,title){const subdued=step==='参考';put(page.c,step,M,page.y+16,13,subdued?palette.muted:palette.sageDark,true,66);put(page.c,title,M+76,page.y+22,23,subdued?palette.muted:palette.ink,true,CW-76);page.c.fillStyle=subdued?'#e5e2d9':'#d9dfd1';page.c.fillRect(M,page.y+34,82,2);page.y+=50}
-      function section(step,title,items){if(!items.length)items=[{height:76,draw(c,y){round(c,M,y,CW,60,14,palette.paper,palette.line);put(c,'登録内容はありません',M+18,y+37,16,palette.muted,false,CW-36)}}];if(page.y+50+items[0].height>page.bottom)newPage();heading(step,title);items.forEach((item,i)=>{if(page.y+item.height>page.bottom){newPage();heading(step,`${title}（続き）`)}item.draw(page.c,page.y);page.y+=item.height+12});page.y+=6}
+      function section(step,title,items){
+        if(!items.length)items=[{height:76,draw(c,y){round(c,M,y,CW,60,14,palette.paper,palette.line);put(c,'登録内容はありません',M+18,y+37,16,palette.muted,false,CW-36)}}];
+        const headingHeight=50,itemGap=12,sectionGap=6,maxFreshItem=page.bottom-(108+headingHeight),totalHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+itemGap,0)+sectionGap;
+        const available=page.bottom-page.y;
+        // Keep a complete section together when it fits on a page. Longer lists
+        // may span pages, but only at complete account/role/goal card boundaries.
+        if(totalHeight<=page.bottom-108){if(totalHeight>available)newPage()}
+        else if(headingHeight+Math.min(items[0].height,maxFreshItem)+itemGap>available)newPage();
+        heading(step,title);
+        items.forEach((item,i)=>{
+          if(i>0&&(item.height>page.bottom-page.y||item.height>maxFreshItem)){newPage();heading(step,`${title}（続き）`)}
+          const availableHeight=page.bottom-page.y,scale=Math.min(1,availableHeight/item.height),drawY=page.y;
+          if(scale<1){const offset=(CW-CW*scale)/2;page.c.save();page.c.translate(M+offset,drawY);page.c.scale(scale,scale);page.c.translate(-M,-drawY);item.draw(page.c,drawY);page.c.restore()}
+          else item.draw(page.c,drawY);
+          page.y+=item.height*scale+itemGap;
+        });
+        page.y+=sectionGap;
+      }
       function metric(c,x,y,w,h,label,value,fill=palette.paper,large=18){round(c,x,y,w,h,10,fill,palette.line);put(c,label,x+12,y+20,12,palette.muted,true,w-24);put(c,value,x+12,y+h-13,large,palette.ink,true,w-24)}
       const assets=currentAssets(),assetItems=[['現金・預貯金',yen(assets.cash)],['投資・運用資産',yen(assets.investment)],['その他',yen(assets.other)],['資産合計',yen(assets.total)]];
       section('STEP 1','資産の合計',[{height:156,draw(c,y){const gap=10,w=(CW-gap)/2,h=64;assetItems.forEach(([label,value],i)=>{const row=Math.floor(i/2),col=i%2;metric(c,M+col*(w+gap),y+row*(h+8),w,h,label,value,i===3?'#edf1e8':palette.paper,22)})}}]);
