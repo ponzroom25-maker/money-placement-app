@@ -91,3 +91,7 @@
 .asset-prompt{background:transparent;border:0;border-radius:0;padding:12px 0 10px}
 @media(max-width:760px){.asset-prompt{padding:12px 0 10px}}
 .pdf-hint{text-align:center;margin:8px 0 0;font-size:11px}
+.step-navigation{display:flex;justify-content:flex-end;margin:24px 0 8px}
+.step-next{min-width:220px;padding:13px 18px}
+.step-next span{margin-left:10px;font-size:18px;line-height:1}
+@media(max-width:760px){.step-navigation{margin:22px 0 6px}.step-next{width:100%;min-width:0}}
