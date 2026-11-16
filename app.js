@@ -50,36 +50,37 @@
       }
       newPage(true);
       function heading(step,title){const subdued=step==='参考';put(page.c,step,M,page.y+16,13,subdued?palette.muted:palette.sageDark,true,66);put(page.c,title,M+76,page.y+22,23,subdued?palette.muted:palette.ink,true,CW-76);page.c.fillStyle=subdued?'#e5e2d9':'#d9dfd1';page.c.fillRect(M,page.y+34,82,2);page.y+=50}
-      function section(step,title,items){
+      function section(step,title,items,options={}){
         if(!items.length)items=[{height:76,draw(c,y){round(c,M,y,CW,60,14,palette.paper,palette.line);put(c,'登録内容はありません',M+18,y+37,16,palette.muted,false,CW-36)}}];
-        const headingHeight=50,itemGap=12,sectionGap=6,maxFreshItem=page.bottom-(108+headingHeight),totalHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+itemGap,0)+sectionGap;
+        const headingHeight=50,itemGap=12,sectionGap=6,maxFreshItem=page.bottom-(108+headingHeight);
+        let drawItems=items,layoutGap=itemGap,totalHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+itemGap,0)+sectionGap;
         let available=page.bottom-page.y;
-        // Keep a section together when it fits the remaining page; otherwise
-        // continue with complete cards if one can fit before starting a new page.
-        // Long lists break only at account/role/goal card boundaries.
-        if(totalHeight<=page.bottom-108&&totalHeight<=available){
-          let layoutGap=itemGap,scale=1;
-          if(scale===1&&page.sectionCount===0&&totalHeight<available*.62){
-            if(items.length>1)layoutGap+=Math.min(24,Math.max(0,(available-totalHeight)/(items.length+1)));
-            const expandedHeight=headingHeight+items.reduce((sum,item)=>sum+item.height+layoutGap,0)+sectionGap;
-            scale=Math.min(1.07,(W-32)/CW,available/expandedHeight);
-          }
+        if(options.stretchCards&&items.length>=2&&items.length<=8&&totalHeight<=available){
+          const targetHeight=Math.min(available-120,available*.84),extra=Math.min(260,Math.max(0,(targetHeight-totalHeight)/items.length));
+          if(extra>1){drawItems=items.map(item=>({...item,height:item.height+extra,draw(c,y){item.draw(c,y,item.height+extra)}}));totalHeight=headingHeight+drawItems.reduce((sum,item)=>sum+item.height+itemGap,0)+sectionGap}
+        }
+        let wholeScale=1;
+        if(totalHeight<=page.bottom-108&&totalHeight>available){
+          if(totalHeight*.94<=available)wholeScale=available/totalHeight;
+          else if(!options.allowContinuation){newPage();available=page.bottom-page.y}
+        }
+        if(totalHeight<=page.bottom-108&&totalHeight*wholeScale<=available){
+          const scale=wholeScale;
           const startY=page.y;page.c.save();
           if(scale!==1){page.c.translate(W/2,startY);page.c.scale(scale,scale);page.c.translate(-W/2,-startY)}
-          heading(step,title);items.forEach(item=>{item.draw(page.c,page.y);page.y+=item.height+layoutGap});page.y+=sectionGap;page.c.restore();
-          page.y=startY+(headingHeight+items.reduce((sum,item)=>sum+item.height+layoutGap,0)+sectionGap)*scale;page.sectionCount++;
-          return;
+          heading(step,title);drawItems.forEach(item=>{item.draw(page.c,page.y,item.height);page.y+=item.height+layoutGap});page.y+=sectionGap;page.c.restore();
+          page.y=startY+totalHeight*scale;page.sectionCount++;return;
         }
-        const firstItemNeed=headingHeight+itemGap+Math.min(items[0].height,maxFreshItem),firstItemNeedAt94=headingHeight+itemGap+Math.min(items[0].height*.94,maxFreshItem);
+        const firstItemNeed=headingHeight+itemGap+Math.min(drawItems[0].height,maxFreshItem),firstItemNeedAt94=headingHeight+itemGap+Math.min(drawItems[0].height*.94,maxFreshItem);
         if(firstItemNeed>available&&firstItemNeedAt94>available)newPage();
         heading(step,title);page.sectionCount++;
-        items.forEach((item,i)=>{
+        drawItems.forEach((item,i)=>{
           let availableHeight=page.bottom-page.y,scale=1;
           if(i>0&&item.height>availableHeight){if(item.height*.94<=availableHeight)scale=availableHeight/item.height;else{newPage();heading(step,`${title}（続き）`);page.sectionCount++;availableHeight=page.bottom-page.y}}
           if(item.height>availableHeight)scale=Math.min(scale,availableHeight/item.height);
           const drawY=page.y;
-          if(scale<1){const offset=(CW-CW*scale)/2;page.c.save();page.c.translate(M+offset,drawY);page.c.scale(scale,scale);page.c.translate(-M,-drawY);item.draw(page.c,drawY);page.c.restore()}
-          else item.draw(page.c,drawY);
+          if(scale<1){const offset=(CW-CW*scale)/2;page.c.save();page.c.translate(M+offset,drawY);page.c.scale(scale,scale);page.c.translate(-M,-drawY);item.draw(page.c,drawY,item.height);page.c.restore()}
+          else item.draw(page.c,drawY,item.height);
           page.y+=item.height*scale+itemGap;
         });
         page.y+=sectionGap;
@@ -88,9 +89,9 @@
       const assets=currentAssets(),assetItems=[['現金・預貯金',yen(assets.cash)],['投資・運用資産',yen(assets.investment)],['その他',yen(assets.other)],['資産合計',yen(assets.total)]];
       section('STEP 1','資産の合計',[{height:156,draw(c,y){const gap=10,w=(CW-gap)/2,h=64;assetItems.forEach(([label,value],i)=>{const row=Math.floor(i/2),col=i%2;metric(c,M+col*(w+gap),y+row*(h+8),w,h,label,value,i===3?'#edf1e8':palette.paper,22)})}}]);
 
-      const accountCards=state.accounts.map((a,i)=>{const nameLines=wrap(`${i+1}. ${a.name}`,CW-40,22,true);const info=[`残高・評価額：${yen(a.balance)}　種類：${a.type}`,`名義：${a.owner||'—'}　今の役割：${roleLabel(a.role)}`,...(a.links?[`連携先・入出金：${a.links}`]:[]),...(a.memo?[`メモ：${a.memo}`]:[])].flatMap(t=>wrap(t,CW-40,16));const height=20+nameLines.length*27+info.length*23+15;return {height,draw(c,y){round(c,M,y,CW,height,14,palette.paper,palette.line);lines(c,nameLines,M+18,y+31,22,palette.ink,true,27,CW-36);lines(c,info,M+18,y+31+nameLines.length*27,16,palette.muted,false,23,CW-36)}}});
+      const accountCards=state.accounts.map((a,i)=>{const nameLines=wrap(`${i+1}. ${a.name}`,CW-40,22,true);const info=[`残高・評価額：${yen(a.balance)}　種類：${a.type}`,`名義：${a.owner||'—'}　今の役割：${roleLabel(a.role)}`,...(a.links?[`連携先・入出金：${a.links}`]:[]),...(a.memo?[`メモ：${a.memo}`]:[])].flatMap(t=>wrap(t,CW-40,16));const height=20+nameLines.length*27+info.length*23+15;return {height,draw(c,y,cardHeight=height){const extra=Math.max(0,cardHeight-height),extraLineGap=Math.min(12,extra/Math.max(3,nameLines.length+info.length+1)),nameStep=27+extraLineGap,infoStep=23+extraLineGap,contentHeight=nameLines.length*nameStep+info.length*infoStep,contentY=y+Math.max(31,(cardHeight-contentHeight)/2);round(c,M,y,CW,cardHeight,14,palette.paper,palette.line);lines(c,nameLines,M+18,contentY,22,palette.ink,true,nameStep,CW-36);lines(c,info,M+18,contentY+nameLines.length*nameStep,16,palette.muted,false,infoStep,CW-36)}}});
       if(!accountCards.length)accountCards.push({height:72,draw(c,y){round(c,M,y,CW,56,14,palette.paper,palette.line);put(c,'口座・資産の登録はありません',M+18,y+35,16,palette.muted,false,CW-36)}});
-      section('STEP 1','口座・資産一覧',accountCards);
+      section('STEP 1','口座・資産一覧',accountCards,{allowContinuation:true,stretchCards:true});
 
       const roleValues=sums(),roleData=roles.map(([k,label,purpose])=>{const names=state.accounts.filter(a=>a.role===k).map(a=>a.name).join('、')||'登録口座なし';const placeLines=wrap(`置いている口座：${names}`,CW-40,14);const target=state.targets[k];return {k,label,purpose,target,current:roleValues[k],gap:target===null?'未入力':yen(shortfall(target,roleValues[k])),targetText:target===null?'未入力':yen(target),placeLines,height:18+29+73+10+placeLines.length*20+14}});
       const roleItems=roleData.map(r=>({height:r.height,draw(c,y){const tint={use:palette.green,protect:palette.peach,save:palette.butter,grow:palette.lavender}[r.k];round(c,M,y,CW,r.height,14,tint,palette.line);round(c,M,y,7,r.height,4,roleColors[r.k]);put(c,r.label,M+20,y+29,21,roleColors[r.k],true,120);put(c,r.purpose,M+145,y+28,14,palette.muted,false,CW-165);const gap=8,w=(CW-56-gap*2)/3,top=y+41;[['目標',r.targetText],['現在',yen(r.current)],['不足額',r.gap]].forEach(([label,value],i)=>metric(c,M+20+i*(w+gap),top,w,64,label,value,palette.paper,17));lines(c,r.placeLines,M+20,top+64+25,14,palette.muted,false,20,CW-40)}}));
@@ -142,6 +143,7 @@
   $('deleteAccount').onclick=()=>{const id=$('accountId').value;if(id&&confirm('この口座を削除しますか？')){state.accounts=state.accounts.filter(a=>a.id!==id);state.flowAccountIds=state.flowAccountIds.map(accountId=>accountId===id?'':accountId);delete state.reviews[id];$('accountDialog').close();persist();toast('口座を削除しました')}};
   $('entryDate').onchange=e=>{state.entryDate=e.target.value;persist()};
   document.querySelectorAll('.step-tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.step-tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+b.dataset.view));window.scrollTo({top:0,behavior:'smooth'})});
+  document.querySelectorAll('[data-next-view]').forEach(b=>b.onclick=()=>{const tab=Array.from(document.querySelectorAll('.step-tab')).find(x=>x.dataset.view===b.dataset.nextView);tab?.click()});
   document.addEventListener('click',e=>{const a=e.target.closest('[data-edit]');if(a){openAccount(state.accounts.find(x=>x.id===a.dataset.edit));return}const r=e.target.closest('[data-review]');if(r){openReview(state.accounts.find(x=>x.id===r.dataset.review));return}const g=e.target.closest('[data-goal-edit]');if(g)openGoal(state.goals.find(x=>x.id===g.dataset.goalEdit))});
   document.addEventListener('change',e=>{const t=e.target;if(t.dataset.target){state.targets[t.dataset.target]=t.value===''?null:Number(t.value);persist()}else if(t.dataset.goalField){const g=state.goals.find(x=>x.id===t.dataset.id);if(g){g[t.dataset.goalField]=['target','current'].includes(t.dataset.goalField)?Number(t.value)||0:t.value;persist()}}else if(t.dataset.flowAccount!==undefined){state.flowAccountIds[Number(t.dataset.flowAccount)]=t.value;persist()}else if(t.dataset.reviewStatus){const id=t.dataset.reviewStatus,prev=state.reviews[id]||{};state.reviews[id]={...prev,status:t.value};persist()}else if(t.id==='importFile'){} });
   document.addEventListener('input',e=>{const t=e.target;if(t.dataset.target!==undefined){state.targets[t.dataset.target]=t.value===''?null:Number(t.value);localStorage.setItem(KEY,JSON.stringify(state))}else if(t.dataset.goalField&&['target','current'].includes(t.dataset.goalField)){const g=state.goals.find(x=>x.id===t.dataset.id);if(g){g[t.dataset.goalField]=Number(t.value)||0;localStorage.setItem(KEY,JSON.stringify(state))}}});
