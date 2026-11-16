@@ -17,6 +17,7 @@
     <div class="section-head"><div><h3>口座・資産一覧 <span class="count" id="accountCount">0</span></h3></div></div>
     <div id="accountList" class="account-list"></div>
     <p class="warning">※口座番号・暗証番号・ログインID・パスワードは記入しないでください。</p>
+    <div class="step-navigation"><button type="button" class="primary step-next" data-next-view="step2">STEP 2へ進む <span aria-hidden="true">→</span></button></div>
   </section>
   <section id="view-step2" class="view">
     <div class="intro"><span class="step-label">STEP 2</span><h2>お金を4つの役割に仕分けよう</h2><p>お金は金額だけでなく、何のために置いているかが大切です。<br>STEP1で選んだ役割ごとに現在額を自動集計し、目標との差額も表示します。</p></div>
@@ -24,6 +25,7 @@
     <div class="section-head"><div><h3>役割別にいくらある？</h3><p>STEP1から自動集計</p></div></div><div id="roleRows" class="role-table"></div>
     <div class="panel"><div class="section-head compact"><div><h3>積立貯金を目的別に整理</h3></div><button class="secondary" id="addGoal">＋ 積立貯金を追加</button></div><p class="muted">目的ごとの目標・現在額・置き場所・使う時期を記録できます。</p><div id="goalRows" class="goal-table"></div><p id="goalEmpty" class="empty-inline">目的別の入力欄はまだありません。</p></div>
     <div class="panel cash-panel"><h3>現金で残す金額の整理</h3><p class="muted">STEP1の現金・預貯金と、STEP2で決めた目標額から計算します。</p><div id="cashPlan" class="cash-plan"></div><div class="calculation-note">ここで出た金額は目安です。すべてを運用に回す必要はありません。収入の変化や、近い将来の大きな支出も含めて考えましょう。<br>投資に回せるお金は、長期間使わないお金の金額です。これは使う・守るの目標金額を入力すると計算されます。</div></div>
+    <div class="step-navigation"><button type="button" class="primary step-next" data-next-view="step3">STEP 3へ進む <span aria-hidden="true">→</span></button></div>
   </section>
   <section id="view-step3" class="view">
     <div class="intro"><span class="step-label">STEP 3</span><h2>口座を「残す・保留・解約」に仕分けよう</h2><p>口座の役割と連携先を確認したら、これからも必要かを判断します👀<br>すぐに決められない口座は「保留」にして、見直す期限を決めればOKです。口座名と役割はSTEP1から自動表示されます。</p></div>
