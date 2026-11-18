@@ -95,3 +95,104 @@
 .step-next{min-width:220px;padding:13px 18px}
 .step-next span{margin-left:10px;font-size:18px;line-height:1}
 @media(max-width:760px){.step-navigation{margin:22px 0 6px}.step-next{width:100%;min-width:0}}
+
+/* Brighter gingham hero and illustrated step/account cards. */
+:root{--cream:#fbf8ef;--paper:#fffefa}
+body{background:var(--cream)}
+.hero{min-height:270px;padding:40px 44px;gap:24px;border:1px solid #f0e4c4;border-radius:24px;background-color:#fffdf4;background-image:linear-gradient(rgba(244,222,166,.35) 50%,transparent 50%),linear-gradient(90deg,rgba(244,222,166,.35) 50%,transparent 50%);background-size:28px 28px;box-shadow:0 4px 18px #76643d0a}
+.hero-copy{flex:1;min-width:0}
+.hero .eyebrow{margin:0 0 6px;color:#967c60;font-size:12px;font-weight:700;letter-spacing:.04em}
+.hero h1{margin:0;color:#78634f;font-size:27px;line-height:1.4}
+.hero-house{flex:none;width:128px;height:96px;margin:0;opacity:1;color:inherit}
+.hero-house svg{display:block;width:100%;height:100%;fill:none}
+.hero-house svg path:nth-of-type(2){stroke:#c98262}
+.hero-house svg path:last-of-type{stroke:#71875e}
+.step-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:16px 0 10px;border:0}
+.step-nav .step-tab{display:flex;min-width:0;flex-direction:column;align-items:stretch;gap:8px;padding:10px;border:1px solid transparent;border-radius:16px;color:#fff;font:inherit;font-weight:700;transition:transform .16s ease,box-shadow .16s ease}
+.step-nav .step-tab:hover{transform:translateY(-1px)}
+.step-nav .step-tab.active{box-shadow:0 4px 12px #564b3620}
+.step-tab-one,.step-nav .step-tab-one.active{background:#b7c994;color:#fff}
+.step-tab-two,.step-nav .step-tab-two.active{background:#f2d27d;color:#fff}
+.step-tab-three,.step-nav .step-tab-three.active{background:#e9a88e;color:#fff}
+.step-tab .step-number{display:block;padding-bottom:5px;border-bottom:1px solid #ffffffc9;text-align:center;font-size:12px;font-weight:750;letter-spacing:.09em;line-height:1.2}
+.step-tab .step-tab-main{display:flex;min-height:48px;align-items:center;justify-content:center;gap:7px;padding:6px 8px;border-radius:999px;background:#fffdf4eF}
+.step-tab-main>span{display:block;font-size:13px;font-weight:700;letter-spacing:0;line-height:1.2;color:var(--brown);white-space:nowrap}
+.step-tab-icon{width:27px;height:27px;flex:none;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.step-tab-one .step-tab-icon{color:#708a5c}.step-tab-one .step-tab-icon path:first-child{fill:currentColor;stroke:none}
+.step-tab-two .step-tab-icon{color:#c7952e}.step-tab-three .step-tab-icon{color:#b87659}
+#view-step1 .section-head{padding:0 4px 10px;margin-bottom:10px;border-bottom:1px solid #dce4d2}
+#view-step1 .section-head h3{display:flex;align-items:center;gap:8px}
+.account-heading-icon{width:30px;height:30px;flex:none;fill:#78916a;stroke:#78916a}
+.account-list{gap:0;padding:8px 12px;border:1px solid #e6e2d6;border-radius:18px;background:var(--paper);box-shadow:var(--shadow)}
+.account-list:empty{display:none}
+.account-row{border:0;border-bottom:1px solid #e4e9dc;border-radius:0;background:transparent}
+.account-row:last-child{border-bottom:0}
+.account-row.head{margin:0 0 2px;border:0;border-radius:10px;background:#f4f1e8}
+.account-row-main{padding:13px 8px}
+.account-no.account-art{display:grid;width:44px;height:44px;place-items:center;border-radius:13px;background:#edf3e4;color:#708a5c;font-size:0}
+.account-art svg{display:block;width:27px;height:27px;fill:currentColor;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.account-row.role-protect .account-art{background:#f9eee7;color:#b48266}
+.account-row.role-save .account-art{background:#fff3d1;color:#d09b2f}
+.account-row.role-grow .account-art{background:#edf3e4;color:#78916a}
+.account-row.role-unknown .account-art{background:#efeee9;color:#898477}
+@media(max-width:760px){
+ .hero{min-height:152px;padding:23px 20px;border-radius:18px;gap:14px}
+ .hero h1{font-size:23px}
+ .hero-house{width:88px;height:66px}
+ .step-nav{gap:7px;padding:14px 0 8px}
+ .step-nav .step-tab{gap:7px;padding:8px 6px;border-radius:14px}
+ .step-tab .step-number{font-size:10px}
+ .step-tab-main{min-height:42px;gap:4px;padding:5px 4px}
+ .step-tab-main>span{font-size:11px}
+ .step-tab-icon{width:23px;height:23px}
+ .account-list{padding:6px 9px;border-radius:15px}
+ .account-row-main{grid-template-columns:44px minmax(0,1fr) minmax(84px,auto) 54px;gap:7px;padding:11px 4px}
+ .account-no.account-art{width:40px;height:40px}
+ .account-art svg{width:24px;height:24px}
+}
+@media(max-width:380px){
+ .hero{min-height:142px;padding:20px 15px;gap:8px}
+ .hero h1{font-size:20px}
+ .hero .eyebrow{font-size:10px}
+ .hero-house{width:70px;height:53px}
+ .step-nav{gap:5px}
+ .step-nav .step-tab{padding:7px 3px}
+ .step-tab-main{gap:2px}
+ .step-tab-main>span{font-size:10px}
+ .step-tab-icon{width:20px;height:20px}
+ .account-row-main{grid-template-columns:38px minmax(0,1fr) minmax(76px,auto) 48px;padding:9px 2px}
+ .account-no.account-art{width:36px;height:36px;border-radius:11px}
+ .account-art svg{width:21px;height:21px}
+}
+
+/* Coordinate worksheet inputs and calculated values with the brighter palette. */
+:root{--sage-pale:#eef2e8;--yellow:#fff5d8;--gray:#f0f1eb;--line:#e8e2d7}
+input,select,textarea{border-color:#e6dfd2;background:#fffefa}
+input:focus,select:focus,textarea:focus{border-color:#c9a54f;box-shadow:0 0 0 3px #d6aa4c30}
+.role-row input,.goal-row input,.goal-row select,.flow-row select,.check-line select{border-color:#eadba9;background:#fff5d8}
+.role-row input:focus,.goal-row input:focus,.goal-row select:focus,.flow-row select:focus,.check-line select:focus{border-color:#c9a54f;background:#fff9e8;box-shadow:0 0 0 3px #d6aa4c2b}
+.auto-value{border:1px solid #e2e6dc;background:#f0f1eb;color:#5d6257}
+.role-current .auto-value{border-color:#dce7d5;background:#edf3e8;color:#53674c}
+.role-shortfall .auto-value{border-color:#ecded4;background:#f8efea;color:#76574b}
+.role-shortfall .auto-value.shortfall{color:var(--red)}
+.role-use{--role-color:#78a38b;background:#f0f6ef}
+.role-protect{--role-color:#bd876b;background:#fbf1eb}
+.role-save{--role-color:#b99a4a;background:#fbf5e4}
+.role-grow{--role-color:#82968a;background:#f0f4ef}
+.role-explain-grid article:nth-child(1){--role-color:#78a38b;--role-tint:#f0f6ef}
+.role-explain-grid article:nth-child(2){--role-color:#bd876b;--role-tint:#fbf1eb}
+.role-explain-grid article:nth-child(3){--role-color:#b99a4a;--role-tint:#fbf5e4}
+.role-explain-grid article:nth-child(4){--role-color:#82968a;--role-tint:#f0f4ef}
+.role-total-row{border:1px solid #dce6d4;background:#edf2e8}
+.summary-strip article:nth-child(1){background:#f2f6ed;border-color:#e0e8d8}
+.summary-strip article:nth-child(2){background:#fff8e7;border-color:#f0e3bf}
+.summary-strip article:nth-child(3){background:#fbf1eb;border-color:#efdfd6}
+.summary-strip .grand{background:#78856a;border-color:#78856a}
+.secondary,.edit-link{border:1px solid #efdfa9;background:#fff4d3;color:#7b642c}
+.secondary:hover,.edit-link:hover{background:#ffedb9}
+
+/* Match primary STEP 1/2 actions and total assets to the gingham palette. */
+.add-account-main,.primary.step-next{border:1px solid #eac768;background:#f2d27d;color:#594a2b;box-shadow:0 3px 10px #d6aa4c20}
+.primary.add-account-main:hover,.primary.step-next:hover{border-color:#e1bd58;background:#edca6e;color:#514322}
+.summary-strip .grand{border-color:#efcfc0;background:#faeee8;color:#51483c}
+.summary-strip .grand small{color:#8a6653}
